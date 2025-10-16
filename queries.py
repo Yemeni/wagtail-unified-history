@@ -34,7 +34,7 @@ def get_merged_history_qs(root_page, filters=None):
     log_data = []
     for entry in log_entries:
         try:
-            # ✅ built-in Wagtail 7.1 formatter on each entry
+            # built-in Wagtail 7.1 formatter on each entry
             message = entry.formatter.format_message(entry) if entry.formatter else (
                 entry.message or entry.action
             )
