@@ -92,10 +92,6 @@ You can filter entries using the **Filter** dropdown:
 
 ---
 
-
-
----
-
 **Author:** Yousef Al-Hadhrami
 **Frameworks:** Django 5.2.4 / Wagtail 7.1.1 / Python 3.12
 **Last Updated:** October 2025
