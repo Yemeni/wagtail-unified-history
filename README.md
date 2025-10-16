@@ -20,7 +20,7 @@ It unifies Wagtail’s `PageLogEntry`, workflow events, and comments into a sing
 
 ## 📁 Project Structure
 
-
+```text
 wagtail_unified_history/
 │
 ├── **init**.py
@@ -31,7 +31,7 @@ wagtail_unified_history/
 │   └── wagtail_unified_history/
 │       └── merged_history.html
 └── README.md
-
+```
 
 ---
 
