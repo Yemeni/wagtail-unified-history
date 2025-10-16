@@ -1,35 +1,56 @@
+from datetime import datetime
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render
-from wagtail.models import Page
+from wagtail.models import Page, PageLogEntry
+from wagtail.admin.views.generic.history import HistoryFilterSet
 from .queries import get_merged_history_qs
-from .filters import HistoryFilterForm
 
 
 def merged_history_view(request, page_id):
     root_page = get_object_or_404(Page, id=page_id)
-    form = HistoryFilterForm(request.GET or None)
 
-    # Base filters from the form
+    descendant_ids = list(
+        Page.objects.filter(path__startswith=root_page.path).values_list("id", flat=True)
+    )
+    base_qs = PageLogEntry.objects.filter(page_id__in=descendant_ids)
+    filterset = HistoryFilterSet(request.GET or None, queryset=base_qs)
+
     filters = {}
-    if form.is_valid():
+    if filterset.is_valid():
+        data = filterset.form.cleaned_data
+        users = data.get("user") or []
+        actions = data.get("action") or []
         filters = {
-            "user_id": form.cleaned_data.get("user").id if form.cleaned_data.get("user") else None,
-            "date_from": form.cleaned_data.get("date_from"),
-            "date_to": form.cleaned_data.get("date_to"),
+            "user_ids": [u.id for u in users],
+            "actions": actions,
         }
 
-    # Extra filter from querystring (?entry_type=log)
-    entry_type = request.GET.get("entry_type")
+    date_from_str = request.GET.get("timestamp_from")
+    date_to_str = request.GET.get("timestamp_to")
 
-    # Always pass a Page instance, not its id
-    qs = get_merged_history_qs(root_page, filters)
+    date_from = (
+        datetime.strptime(date_from_str, "%Y-%m-%d").date() if date_from_str else None
+    )
+    date_to = datetime.strptime(date_to_str, "%Y-%m-%d").date() if date_to_str else None
 
-    # Optional type filter
-    if entry_type:
-        qs = [e for e in qs if e.get("entry_type") == entry_type]
+    filters["date_from"] = date_from
+    filters["date_to"] = date_to
 
-    # Pagination
-    paginator = Paginator(qs, 50)
+    entries = get_merged_history_qs(root_page, filters)
+
+    if filters.get("user_ids"):
+        entries = [e for e in entries if e.get("user_id") in filters["user_ids"]]
+
+    if filters.get("actions"):
+        entries = [e for e in entries if e.get("action") in filters["actions"]]
+
+    if date_from:
+        entries = [e for e in entries if e["timestamp"].date() >= date_from]
+
+    if date_to:
+        entries = [e for e in entries if e["timestamp"].date() <= date_to]
+
+    paginator = Paginator(entries, 50)
     page_num = request.GET.get("p", 1)
     entries = paginator.get_page(page_num)
 
@@ -39,8 +60,6 @@ def merged_history_view(request, page_id):
         {
             "root_page": root_page,
             "entries": entries,
-            "form": form,
-            "entry_type": entry_type,
-            "query_params": request.GET.urlencode(),
+            "filters": filterset,
         },
     )

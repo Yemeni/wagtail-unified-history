@@ -1,0 +1,14 @@
+{% extends "wagtailadmin/pages/history.html" %}
+{% load wagtailadmin_tags i18n %}
+
+{% block header %}
+  {{ block.super }}
+  <div class="w-flex w-justify-end w-px-5 w-py-2">
+    <a href="{% url 'wagtail_unified_history:merged_history' object.id %}"
+       class="button button--icon"
+       title="{% trans 'View merged history for this page and descendants' %}">
+      {% icon name="history" %}
+      {% trans "Merged history" %}
+    </a>
+  </div>
+{% endblock %}

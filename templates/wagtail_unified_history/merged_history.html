@@ -5,69 +5,70 @@
   <div class="w-panel">
     <h1>🕓 Merged History for {{ root_page.get_admin_display_title }}</h1>
 
-    <form method="get" class="w-form">
-      {{ form.as_p }}
-      <button type="submit" class="button">{% trans "Filter" %}</button>
+    <form
+      method="get"
+      class="w-slim-header__search-form"
+      role="search"
+      novalidate
+      data-controller="w-swap"
+      data-action="change->w-swap#submitLazy input->w-swap#submitLazy"
+      data-w-swap-target-value="#listing-results"
+      data-w-swap-src-value="{{ request.path }}"
+      data-w-swap-reflect-value="true"
+    >
+      <div
+        id="filters-drilldown"
+        class="w-drilldown"
+        data-controller="w-drilldown"
+        data-action="w-swap:success@document->w-drilldown#updateCount w-dropdown:hide->w-drilldown#delayedClose w-dropdown:clickaway->w-drilldown#preventOutletClickaway"
+        data-w-drilldown-count-attr-value="data-w-active-filter-id"
+        data-w-drilldown-w-action-outlet="[data-w-active-filter-id][data-controller='w-action']"
+        data-w-drilldown-w-dropdown-outlet="#filters-drilldown [data-controller='w-dropdown']"
+      >
+        {% include "wagtailadmin/shared/headers/_filters.html" %}
+      </div>
     </form>
 
-    <table class="listing">
-      <thead>
-        <tr>
-          <th>{% trans "Date" %}</th>
-          <th>{% trans "User" %}</th>
-          <th>{% trans "Page" %}</th>
-          <th>{% trans "Action" %}</th>
-          
-        </tr>
-      </thead>
-      <tbody>
-        {% for e in entries %}
+
+    
+    <div id="listing-results">
+      <table class="listing">
+        <thead>
           <tr>
-            <td>{{ e.timestamp|date:"Y-m-d H:i" }}</td>
-
-            <td>
-              {% if e.user__username %}
-                <a href="{% url 'wagtailusers_users:edit' e.user_id %}" class="nolink">
-                  {{ e.user__username }}
-                </a>
-              {% else %}
-                —
-              {% endif %}
-            </td>
-
-            <td>
-              {% if e.page_id %}
-                <a href="{% url 'wagtailadmin_pages:edit' e.page_id %}">
-                  {{ e.page__title|default:"(deleted)" }}
-                </a>
-              {% else %}
-                —
-              {% endif %}
-            </td>
-
-            {% comment %} <td>{{ e.action }}</td> {% endcomment %}
-
-            {% comment %} <td>
-              <a href="?entry_type={{ e.entry_type }}" class="nolink">
-                {{ e.entry_type|capfirst }}
-              </a>
-            </td> {% endcomment %}
-
-
-            {% comment %} <td>{{ e.action|safe }}</td>
-            <td>{{ e.entry_type|capfirst }}</td> {% endcomment %}
-
-            {% comment %} <td>{{ e.timestamp|date:"Y-m-d H:i" }}</td> {% endcomment %}
-            {% comment %} <td>{{ e.user__username|default:"—" }}</td> {% endcomment %}
-            {% comment %} <td>{{ e.page__title }}</td> {% endcomment %}
-            <td>{{ e.message|safe }}</td>
-
+            <th>{% trans "Date" %}</th>
+            <th>{% trans "User" %}</th>
+            <th>{% trans "Page" %}</th>
+            <th>{% trans "Action" %}</th>
           </tr>
-        {% empty %}
-          <tr><td colspan="5">{% trans "No entries found." %}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for e in entries %}
+            <tr>
+              <td>{{ e.timestamp|date:"Y-m-d H:i" }}</td>
+              <td>
+                {% if e.user__username %}
+                  <a href="{% url 'wagtailusers_users:edit' e.user_id %}" class="nolink">
+                    {{ e.user__username }}
+                  </a>
+                {% else %}—{% endif %}
+              </td>
+              <td>
+                {% if e.page_id %}
+                  <a href="{% url 'wagtailadmin_pages:edit' e.page_id %}">
+                    {{ e.page__title|default:"(deleted)" }}
+                  </a>
+                {% else %}—{% endif %}
+              </td>
+              <td>{{ e.message|safe }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5">{% trans "No entries found." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+
 
     {% if entries.has_other_pages %}
       <div class="pagination">
@@ -82,3 +83,17 @@
     {% endif %}
   </div>
 {% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  {{ filters.form.media.js }}
+  <script src="{% versioned_static 'wagtailadmin/js/vendor/jquery-3.6.0.min.js' %}"></script>
+  <script src="{% versioned_static 'wagtailadmin/js/wagtailadmin.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  {{ filters.form.media.css }}
+{% endblock %}
+
+
