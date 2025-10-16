@@ -18,13 +18,10 @@ def get_merged_history_qs(root_page, filters=None):
         .values_list("id", flat=True)
     )
 
-    # make sure all log actions are scanned once
     if not registry.has_scanned_for_actions:
         registry.scan_for_actions()
 
-    # -------------------------------------------------------
     # LOG ENTRIES
-    # -------------------------------------------------------
     log_entries = (
         PageLogEntry.objects.filter(page_id__in=descendant_ids)
         .select_related("user", "page")
@@ -53,9 +50,7 @@ def get_merged_history_qs(root_page, filters=None):
             "entry_type": "log",
         })
 
-    # -------------------------------------------------------
     # REVISIONS
-    # -------------------------------------------------------
     page_ct_ids = [
         ContentType.objects.get_for_model(model).id
         for model in Page.__subclasses__()
@@ -93,10 +88,10 @@ def get_merged_history_qs(root_page, filters=None):
         e["page__title"] = page_titles.get(e["page_id"], "(deleted)")
         rev_data.append(e)
 
-    # -------------------------------------------------------
     # MERGE + FILTER + SORT
-    # -------------------------------------------------------
     combined = log_data + rev_data
+
+    # TODO: add SEARCH
 
     if filters:
         if filters.get("user_id"):
@@ -108,3 +103,5 @@ def get_merged_history_qs(root_page, filters=None):
 
     combined.sort(key=lambda x: x["timestamp"], reverse=True)
     return combined
+
+    
