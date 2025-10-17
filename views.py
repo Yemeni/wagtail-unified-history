@@ -1,9 +1,25 @@
 from datetime import datetime
+
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render
-from wagtail.models import Page, PageLogEntry
 from wagtail.admin.views.generic.history import HistoryFilterSet
+from wagtail.models import Page, PageLogEntry
+
 from .queries import get_merged_history_qs
+
+
+def _is_requesting_results_fragment(request):
+    """Return True when the request asks for the listing results fragment."""
+
+    target = request.headers.get("Wagtail-Swap-Target", "")
+    if target:
+        return target.lstrip("#").strip() == "listing-results"
+
+    partial_header = request.headers.get("Wagtail-Partial", "")
+    if partial_header:
+        return partial_header.lower() in {"1", "true", "yes"}
+
+    return request.headers.get("Wagtail-Request-Type") == "partial"
 
 
 def merged_history_view(request, page_id):
@@ -54,9 +70,13 @@ def merged_history_view(request, page_id):
     page_num = request.GET.get("p", 1)
     entries = paginator.get_page(page_num)
 
+    template_name = "wagtail_unified_history/merged_history.html"
+    if _is_requesting_results_fragment(request):
+        template_name = "wagtail_unified_history/includes/merged_history_results.html"
+
     return render(
         request,
-        "wagtail_unified_history/merged_history.html",
+        template_name,
         {
             "root_page": root_page,
             "entries": entries,
