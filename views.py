@@ -54,9 +54,32 @@ def merged_history_view(request, page_id):
     page_num = request.GET.get("p", 1)
     entries = paginator.get_page(page_num)
 
+    template_name = "wagtail_unified_history/merged_history.html"
+    hx_request_header = request.headers.get("HX-Request")
+    hx_target_header = request.headers.get("HX-Target", "")
+    wagtail_swap_target = request.headers.get("Wagtail-Swap-Target", "")
+    x_requested_with = request.headers.get("X-Requested-With", "")
+    accept_header = request.headers.get("Accept", "")
+
+    wants_partial = False
+    target_header = hx_target_header or wagtail_swap_target
+    if target_header:
+        wants_partial = target_header.lstrip("#").strip() == "listing-results"
+
+    if not wants_partial:
+        if hx_request_header:
+            wants_partial = True
+        elif x_requested_with.lower() == "xmlhttprequest":
+            wants_partial = True
+        elif "text/vnd.wagtailadmin.partial+html" in accept_header:
+            wants_partial = True
+
+    if wants_partial:
+        template_name = "wagtail_unified_history/includes/merged_history_results.html"
+
     return render(
         request,
-        "wagtail_unified_history/merged_history.html",
+        template_name,
         {
             "root_page": root_page,
             "entries": entries,

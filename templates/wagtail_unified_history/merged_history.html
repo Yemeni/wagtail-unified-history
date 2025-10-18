@@ -32,55 +32,8 @@
 
     
     <div id="listing-results">
-      <table class="listing">
-        <thead>
-          <tr>
-            <th>{% trans "Date" %}</th>
-            <th>{% trans "User" %}</th>
-            <th>{% trans "Page" %}</th>
-            <th>{% trans "Action" %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for e in entries %}
-            <tr>
-              <td>{{ e.timestamp|date:"Y-m-d H:i" }}</td>
-              <td>
-                {% if e.user__username %}
-                  <a href="{% url 'wagtailusers_users:edit' e.user_id %}" class="nolink">
-                    {{ e.user__username }}
-                  </a>
-                {% else %}—{% endif %}
-              </td>
-              <td>
-                {% if e.page_id %}
-                  <a href="{% url 'wagtailadmin_pages:edit' e.page_id %}">
-                    {{ e.page__title|default:"(deleted)" }}
-                  </a>
-                {% else %}—{% endif %}
-              </td>
-              <td>{{ e.message|safe }}</td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="5">{% trans "No entries found." %}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      {% include "wagtail_unified_history/includes/merged_history_results.html" %}
     </div>
-
-
-
-    {% if entries.has_other_pages %}
-      <div class="pagination">
-        {% if entries.has_previous %}
-          <a href="?p={{ entries.previous_page_number }}">{% trans "Previous" %}</a>
-        {% endif %}
-        Page {{ entries.number }} of {{ entries.paginator.num_pages }}
-        {% if entries.has_next %}
-          <a href="?p={{ entries.next_page_number }}">{% trans "Next" %}</a>
-        {% endif %}
-      </div>
-    {% endif %}
   </div>
 {% endblock %}
 
