@@ -43,6 +43,8 @@ wagtail_unified_history/
    INSTALLED_APPS = [
        # your existing apps …
        "wagtail_unified_history",
+       # wagtail admin should be after
+       "wagtail.admin",
    ]
     ```
 2. Include the admin route in your main `urls.py`:
