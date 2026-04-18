@@ -52,6 +52,8 @@ wagtail_unified_history/
 
    urlpatterns = [
        path("admin/wagtail-unified-history/", include("wagtail_unified_history.urls")),
+       # then your default admin urls after the wagtail unified history
+       path("admin/", include(wagtailadmin_urls)),
        # other admin and site urls …
    ]
    ```
